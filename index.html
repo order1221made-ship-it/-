@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<style>
+body{
+  font-family:sans-serif;
+  padding:20px;
+  background:#111;
+  color:white;
+}
+.card{
+  background:#222;
+  padding:16px;
+  margin-bottom:16px;
+  border-radius:16px;
+}
+.row{
+  display:flex;
+  justify-content:space-between;
+  margin:8px 0;
+}
+button{
+  width:40px;
+  height:40px;
+  font-size:20px;
+}
+</style>
+</head>
+<body>
+
+<div id="app"></div>
+
+<script>
+
+const API_URL = "https://script.google.com/macros/s/AKfycbxLhPozYP_ulerhUxJVgTkQHXuXWjK4ycCkzDKsWM_YKCWFdqqO-NFN_CORytbSFDoPhw/exec";
+
+async function loadData() {
+  const res = await fetch(API_URL);
+  const data = await res.json();
+
+  const grouped = {};
+
+  data.forEach(item => {
+    if (!grouped[item.tray]) {
+      grouped[item.tray] = {
+        category: item.category,
+        items: []
+      };
+    }
+
+    grouped[item.tray].items.push(item);
+  });
+
+  const app = document.getElementById("app");
+  app.innerHTML = "";
+
+  Object.keys(grouped).forEach(tray => {
+
+    const card = document.createElement("div");
+    card.className = "card";
+
+    card.innerHTML += `<h2>${tray} ${grouped[tray].category}</h2>`;
+
+    grouped[tray].items.forEach(item => {
+
+      card.innerHTML += `
+        <div class="row">
+          <span>${item.item}</span>
+
+          <div>
+            <button onclick="update('${item.tray}','${item.item}',-1)">-</button>
+
+            ${item.count}
+
+            <button onclick="update('${item.tray}','${item.item}',1)">+</button>
+          </div>
+        </div>
+      `;
+    });
+
+    app.appendChild(card);
+  });
+}
+
+async function update(tray,item,diff){
+
+  await fetch(API_URL,{
+    method:"POST",
+    body:JSON.stringify({
+      tray,
+      item,
+      diff
+    })
+  });
+
+  loadData();
+}
+
+loadData();
+
+</script>
+
+</body>
+</html>
